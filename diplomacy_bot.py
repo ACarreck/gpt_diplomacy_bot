@@ -188,5 +188,5 @@ async def on_ready():
 
 
 
-
-bot.run("DISCORD_BOT_TOKEN")
+from settings import TOKEN
+bot.run(TOKEN)
