@@ -11,7 +11,7 @@ from io import BytesIO
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPM, shapes
 
-intents = discord.Intents.default()
+intents = discord.Intents.all()
 intents.typing = False
 intents.presences = False
 intents.messages = True
