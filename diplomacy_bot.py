@@ -9,7 +9,7 @@ from PIL import Image
 import random
 from io import BytesIO
 from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPM, shapes
+from reportlab.graphics import renderPM
 
 
 intents = discord.Intents.all()
@@ -23,7 +23,7 @@ intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 # Helper functions
-def convert_svg_to_png(svg_data, scale=3):
+def convert_svg_to_png(svg_data, scale=2):
     svg_io = BytesIO(svg_data.encode('utf-8'))
     drawing = svg2rlg(svg_io)
 
@@ -31,14 +31,11 @@ def convert_svg_to_png(svg_data, scale=3):
     drawing.width *= scale
     drawing.height *= scale
     drawing.scale(scale, scale)
-
-    # Create a new group with the scaled drawing
-    scaled_drawing = shapes.Group()
-    scaled_drawing.add(drawing)
+    drawing.renderScale = scale
 
     # Render the scaled drawing as a PNG image
     png_io = BytesIO()
-    renderPM.drawToFile(scaled_drawing, png_io, fmt='PNG')
+    renderPM.drawToFile(drawing, png_io, fmt='PNG')
     png_io.seek(0)
     return png_io
 
