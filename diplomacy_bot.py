@@ -10,6 +10,7 @@ import random
 from io import BytesIO
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPM, shapes
+import json
 
 intents = discord.Intents.all()
 intents.typing = False
@@ -60,10 +61,12 @@ async def send_map_image(player, game):
 
     # Send a list of valid orders for the player's country
     power = powers_assigned[players.index(player)]
-    game_clone = game.clone()
+    game_state = json.loads(game.to_saved_game_format())
+    game_clone = Game(saved_game_format=game_state)
     game_clone.set_temporarily_unmovable_units([])
     valid_orders = game_clone.get_valid_orders(power)
     await player.send("Here's a list of valid orders for your country:\n" + '\n'.join(valid_orders))
+
 
 
 
@@ -130,7 +133,8 @@ async def order(ctx, *, order_text):
     
     # Check the validity of the submitted order
     power = powers_assigned[players.index(ctx.author)]
-    game_clone = game.clone()
+    game_state = json.loads(game.to_saved_game_format())
+    game_clone = Game(saved_game_format=game_state)
     game_clone.set_temporarily_unmovable_units([])
     valid_orders = game_clone.get_valid_orders(power)
     
