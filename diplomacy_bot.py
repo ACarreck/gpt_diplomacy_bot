@@ -47,7 +47,7 @@ async def create_channels(guild):
 async def send_map_image(player, game):
     buffer = io.BytesIO()
     renderer = Renderer(game)
-    svg_data = renderer.render(incl_abbrev=False)
+    svg_data = renderer.render(incl_abbrev=True)
     cairosvg.svg2png(bytestring=svg_data, write_to=buffer)
     buffer.seek(0)
     await player.send(file=discord.File(fp=buffer, filename="map.png"))
