@@ -62,8 +62,7 @@ async def send_map_image(player, game):
     buffer = io.BytesIO()
     renderer = Renderer(game)
     svg_data = renderer.render(incl_abbrev=True)
-    cairosvg.convert_svg_to_png(svg_data)
-    buffer.seek(0)
+    buffer = convert_svg_to_png(svg_data)
     await player.send(file=discord.File(fp=buffer, filename="map.png"))
 
 # Global variables
