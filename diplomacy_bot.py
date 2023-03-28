@@ -59,9 +59,8 @@ async def send_map_image(player, game):
     await player.send(file=discord.File(fp=buffer, filename="map.png"))
 
     power = powers_assigned[players.index(player)]
-    territories = game.state.territories(power)
     possible_orders = game.get_all_possible_orders()
-    possible_orders = {unit: orders for unit, orders in possible_orders.items() if unit.split()[0] in territories}
+    possible_orders = {unit: orders for unit, orders in possible_orders.items()}
     await player.send("Possible orders for {}: {}".format(power, ', '.join(possible_orders)))
 
 
