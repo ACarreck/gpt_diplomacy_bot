@@ -75,6 +75,7 @@ powers_assigned = []
 @bot.command(name="start")
 async def start(ctx):
     global game, players, orders
+    
     if ctx.channel.name != "bot-commands":
         await ctx.send("Please start and join the game from the bot-commands channel.")
         return
@@ -83,11 +84,12 @@ async def start(ctx):
         await ctx.send("There must be at least 3 players to start the game.")
         return
     
+    game = Game()
+    
     for player in players:
         orders[player.id] = []
         await send_map_image(player, game)
 
-    game = Game()
     await ctx.send("The game has started!")
     bot_announcement, _ = await create_channels(ctx.guild)
     await bot_announcement.send("A new game of Diplomacy has started!")
