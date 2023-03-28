@@ -129,6 +129,18 @@ async def join(ctx, power_choice: str = None):
 @bot.command(name="order")
 async def order(ctx, *, order_text):
     global orders, game
+
+    # Get the first guild the author is a member of
+    guild = None
+    for g in bot.guilds:
+        if g.get_member(ctx.author.id):
+            guild = g
+            break
+
+    if guild is None:
+        await ctx.send("You must be a member of a server where the bot is present.")
+        return
+
     if ctx.author.id not in orders:
         await ctx.send("You are not in the current game.")
         return
