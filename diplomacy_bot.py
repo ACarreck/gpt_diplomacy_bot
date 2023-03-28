@@ -82,6 +82,10 @@ async def start(ctx):
     if len(players) < 1:
         await ctx.send("There must be at least 3 players to start the game.")
         return
+    
+    for player in players:
+        orders[player.id] = []
+        await send_map_image(player, game)
 
     game = Game()
     await ctx.send("The game has started!")
@@ -136,7 +140,7 @@ async def order(ctx, *, order_text):
         await ctx.send("Invalid order. Please provide a valid order.")
         return
 
-    orders[ctx.author.id] = order_text
+    orders[ctx.author.id].append(order_text)
 
     if orders[ctx.author.id] is None:
         orders[ctx.author.id] = [order_text]
