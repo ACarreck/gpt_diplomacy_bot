@@ -10,7 +10,6 @@ import random
 from io import BytesIO
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPM, shapes
-from diplomacy.communication.requests import GetAllPossibleOrders
 
 intents = discord.Intents.all()
 intents.typing = False
@@ -60,7 +59,9 @@ async def send_map_image(player, game):
     await player.send(file=discord.File(fp=buffer, filename="map.png"))
 
     power = powers_assigned[players.index(player)]
-    possible_orders =game.get_all_possible_orders()
+    territories = game.state.territories(power)
+    possible_orders = game.get_all_possible_orders()
+    possible_orders = {unit: orders for unit, orders in possible_orders.items() if unit.split()[0] in territories}
     await player.send("Possible orders for {}: {}".format(power, ', '.join(possible_orders[power])))
 
 
@@ -128,9 +129,17 @@ async def order(ctx, *, order_text):
         return
 
     power = powers_assigned[players.index(ctx.author)]
-    possible_orders = game.get_all_possible_orders()
 
-    if order_text not in possible_orders[power]:
+    unit = order_text.split()[1]
+    if unit not in game.state.units[power]:
+        await ctx.send("You cannot order a unit that does not belong to you.")
+        return
+
+    territories = game.state.territories(power)
+    possible_orders = game.get_all_possible_orders()
+    possible_orders = {unit: orders for unit, orders in possible_orders.items() if unit.split()[0] in territories}
+
+    if order_text not in possible_orders:
         await ctx.send("Invalid order. Please provide a valid order.")
         return
 
