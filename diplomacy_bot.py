@@ -60,7 +60,7 @@ async def send_map_image(player, game):
     await player.send(file=discord.File(fp=buffer, filename="map.png"))
 
     power = powers_assigned[players.index(player)]
-    possible_orders = GetAllPossibleOrders(game=game).get_all_possible_orders()
+    possible_orders =game.get_all_possible_orders()
     await player.send("Possible orders for {}: {}".format(power, ', '.join(possible_orders[power])))
 
 
@@ -128,7 +128,7 @@ async def order(ctx, *, order_text):
         return
 
     power = powers_assigned[players.index(ctx.author)]
-    possible_orders = GetAllPossibleOrders(game=game).get_all_possible_orders()
+    possible_orders = game.get_all_possible_orders()
 
     if order_text not in possible_orders[power]:
         await ctx.send("Invalid order. Please provide a valid order.")
