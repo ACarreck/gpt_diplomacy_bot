@@ -142,9 +142,7 @@ async def order(ctx, *, order_text):
         await ctx.send("Invalid order. Please provide a valid order.")
         return
 
-    orders[ctx.author.id].append(order_text)
-
-    if orders[ctx.author.id] is None:
+    if ctx.author.id not in orders or orders[ctx.author.id] is None:
         orders[ctx.author.id] = [order_text]
     else:
         orders[ctx.author.id].append(order_text)
@@ -171,6 +169,7 @@ async def order(ctx, *, order_text):
             bot_announcement_channel = discord.utils.get(guild.channels, name="bot-announcement")
             if bot_announcement_channel is not None:
                 await send_map_image(bot_announcement_channel, game)
+
 
 
 
