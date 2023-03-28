@@ -62,7 +62,7 @@ async def send_map_image(player, game):
     territories = game.state.territories(power)
     possible_orders = game.get_all_possible_orders()
     possible_orders = {unit: orders for unit, orders in possible_orders.items() if unit.split()[0] in territories}
-    await player.send("Possible orders for {}: {}".format(power, ', '.join(possible_orders[power])))
+    await player.send("Possible orders for {}: {}".format(power, ', '.join(possible_orders)))
 
 
 
@@ -128,16 +128,8 @@ async def order(ctx, *, order_text):
         await ctx.send("You are not in the current game.")
         return
 
-    power = powers_assigned[players.index(ctx.author)]
-
-    unit = order_text.split()[1]
-    if unit not in game.state.units[power]:
-        await ctx.send("You cannot order a unit that does not belong to you.")
-        return
-
-    territories = game.state.territories(power)
     possible_orders = game.get_all_possible_orders()
-    possible_orders = {unit: orders for unit, orders in possible_orders.items() if unit.split()[0] in territories}
+    possible_orders = {unit: orders for unit, orders in possible_orders.items()}
 
     if order_text not in possible_orders:
         await ctx.send("Invalid order. Please provide a valid order.")
