@@ -60,7 +60,7 @@ async def send_map_image(player, game):
 
     power = powers_assigned[players.index(player)]
     possible_orders = game.get_all_possible_orders()
-    possible_orders = {unit: orders for unit, orders in possible_orders.items() if game.map[unit].split()[0] == power}
+    possible_orders = {unit: orders for unit, orders in possible_orders.items() if game.get_unit(unit).split()[0] == power}
     await player.send("Possible orders for {}: {}".format(power, ', '.join(f"{unit}: {', '.join(orders)}" for unit, orders in possible_orders.items())))
 
 
