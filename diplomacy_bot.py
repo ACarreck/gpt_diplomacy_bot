@@ -64,7 +64,6 @@ async def send_map_image(player, game):
     power = powers_assigned[players.index(player)]
     game_state = to_saved_game_format(game)
     game_clone = Game(saved_game_format=game_state)
-    game_clone.set_temporarily_unmovable_units([])
     valid_orders = game_clone.get_valid_orders(power)
     await player.send("Here's a list of valid orders for your country:\n" + '\n'.join(valid_orders))
 
@@ -135,7 +134,6 @@ async def order(ctx, *, order_text):
     power = powers_assigned[players.index(ctx.author)]
     game_state = to_saved_game_format(game)
     game_clone = Game(saved_game_format=game_state)
-    game_clone.set_temporarily_unmovable_units([])
     valid_orders = game_clone.get_valid_orders(power)
     
     if order_text not in valid_orders:
