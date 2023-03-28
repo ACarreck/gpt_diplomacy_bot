@@ -9,33 +9,27 @@ from PIL import Image
 import random
 from io import BytesIO
 from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPM
+from reportlab.graphics import renderPM, shapes
 
-
-intents = discord.Intents.all()
+intents = discord.Intents.default()
 intents.typing = False
 intents.presences = False
 intents.messages = True
 intents.guilds = True
 
-
-
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
-# Helper functions
+
 def convert_svg_to_png(svg_data, scale=2):
     svg_io = BytesIO(svg_data.encode('utf-8'))
     drawing = svg2rlg(svg_io)
 
-    # Scale the drawing for a higher resolution
-    drawing.width *= scale
-    drawing.height *= scale
     drawing.scale(scale, scale)
-    drawing.renderScale = scale
+    scaled_drawing = shapes.Drawing(drawing.width * scale, drawing.height * scale)
+    scaled_drawing.add(drawing)
 
-    # Render the scaled drawing as a PNG image
     png_io = BytesIO()
-    renderPM.drawToFile(drawing, png_io, fmt='PNG')
+    renderPM.drawToFile(scaled_drawing, png_io, fmt='PNG')
     png_io.seek(0)
     return png_io
 
@@ -45,23 +39,15 @@ async def create_channels(guild):
         guild.default_role: discord.PermissionOverwrite(read_messages=True),
         guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True),
     }
-    
-    bot_announcement = None
-    for channel in guild.text_channels:
-        if channel.name == "bot-announcement":
-            bot_announcement = channel
-            break
+
+    bot_announcement = discord.utils.get(guild.text_channels, name="bot-announcement")
     if not bot_announcement:
         bot_announcement = await guild.create_text_channel("bot-announcement", overwrites=overwrites)
-    
-    bot_commands = None
-    for channel in guild.text_channels:
-        if channel.name == "bot-commands":
-            bot_commands = channel
-            break
+
+    bot_commands = discord.utils.get(guild.text_channels, name="bot-commands")
     if not bot_commands:
         bot_commands = await guild.create_text_channel("bot-commands", overwrites=overwrites)
-    
+
     return bot_announcement, bot_commands
 
 
@@ -72,35 +58,40 @@ async def send_map_image(player, game):
     buffer = convert_svg_to_png(svg_data)
     await player.send(file=discord.File(fp=buffer, filename="map.png"))
 
-# Global variables
+
 game = None
 players = []
 orders = {}
-map_cache = None
 powers_assigned = []
-player_power_map = {} 
 
-# Commands
+
 @bot.command(name="start")
 async def start(ctx):
     global game, players, orders
-    if len(players) <1:
+    if ctx.channel.name != "bot-commands":
+        await ctx.send("Please start and join the game from the bot-commands channel.")
+        return
+
+    if len(players) < 3:
         await ctx.send("There must be at least 3 players to start the game.")
         return
+
     game = Game()
     await ctx.send("The game has started!")
-    bot_announcement = (await create_channels(ctx.guild))[0]
+    bot_announcement, _ = await create_channels(ctx.guild)
     await bot_announcement.send("A new game of Diplomacy has started!")
+
     for player in players:
         orders[player.id] = None
         await send_map_image(player, game)
 
 
-
-
 @bot.command(name="join")
 async def join(ctx, power_choice: str = None):
     global players, powers_assigned
+    if ctx.channel.name != "bot-commands":
+        await ctx.send("Please start and join the game from the bot-commands channel.")
+        return
 
     if ctx.author in players:
         await ctx.send("You have already joined the game.")
@@ -118,8 +109,8 @@ async def join(ctx, power_choice: str = None):
 
     players.append(ctx.author)
     powers_assigned.append(power)
-    await ctx.send(f"{ctx.author.name} has joined the game as {power}.")
-
+    bot_announcement_channel = discord.utils.get(ctx.guild.channels, name="bot-announcement")
+    await bot_announcement_channel.send(f"{ctx.author.mention} has joined the game as {power}.")
 
 
 @bot.command(name="order")
@@ -134,7 +125,7 @@ async def order(ctx, *, order_text):
         game.process()
         for player_id in orders:
             orders[player_id] = None
-        bot_announcement = await create_channels(ctx.guild)
+        bot_announcement, _ = await create_channels(ctx.guild)
         await bot_announcement.send("The turn has advanced!")
         for player in players:
             await send_map_image(player, game)
@@ -144,12 +135,14 @@ async def order(ctx, *, order_text):
         if bot_announcement_channel is not None:
             await send_map_image(bot_announcement_channel, game)
 
+
 @bot.command(name="showmap")
 async def showmap(ctx):
     if ctx.author not in players:
         await ctx.send("You are not in the current game.")
     else:
         await send_map_image(ctx.author, game)
+
 
 @bot.command(name="endgame")
 async def endgame(ctx):
@@ -170,11 +163,12 @@ async def endgame(ctx):
         powers_assigned = []
         del endgame.votes
         await ctx.send("The game has ended.")
-        bot_announcement = await create_channels(ctx.guild)
+        bot_announcement, _ = await create_channels(ctx.guild)
         await bot_announcement.send("The game of Diplomacy has ended!")
     else:
         votes_needed = (len(players) // 2) + 1 - len(endgame.votes)
         await ctx.send(f"{ctx.author.name} has voted to end the game. {votes_needed} more vote(s) needed to end the game.")
+
 
 @bot.event
 async def on_message(message):
@@ -204,6 +198,7 @@ async def show_help(ctx):
 async def on_guild_join(guild):
     await create_channels(guild)
 
+
 @bot.event
 async def on_ready():
     print(f"{bot.user} has connected to Discord!")
@@ -211,7 +206,6 @@ async def on_ready():
         await create_channels(guild)
 
 
-
-
 from settings import TOKEN
 bot.run(TOKEN)
+
