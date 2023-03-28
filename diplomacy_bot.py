@@ -128,12 +128,15 @@ async def order(ctx, *, order_text):
         return
 
     power = powers_assigned[players.index(ctx.author)]
+    units = game.get_units(power)
     possible_orders = game.get_all_possible_orders()
-    possible_orders = {unit: orders for unit, orders in possible_orders.items() if game.map[unit].split()[0] == power}
+    possible_orders = {unit: orders for unit, orders in possible_orders.items() if any(unit in u for u in units)}
 
-    if order_text not in [order for orders in possible_orders.values() for order in orders]:
+    if order_text not in sum(possible_orders.values(), []):
         await ctx.send("Invalid order. Please provide a valid order.")
         return
+
+    orders[ctx.author.id] = order_text
 
     if orders[ctx.author.id] is None:
         orders[ctx.author.id] = [order_text]
