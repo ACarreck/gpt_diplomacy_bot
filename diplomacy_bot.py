@@ -10,7 +10,6 @@ import random
 from io import BytesIO
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPM, shapes
-from diplomacy.utils import order_validator
 
 intents = discord.Intents.all()
 intents.typing = False
@@ -61,8 +60,11 @@ async def send_map_image(player, game):
 
     # Send a list of valid orders for the player's country
     power = powers_assigned[players.index(player)]
-    valid_orders = order_validator.get_all_valid_orders(game, power)
+    game_clone = game.clone()
+    game_clone.set_temporarily_unmovable_units([])
+    valid_orders = game_clone.get_valid_orders(power)
     await player.send("Here's a list of valid orders for your country:\n" + '\n'.join(valid_orders))
+
 
 
 game = None
@@ -128,7 +130,9 @@ async def order(ctx, *, order_text):
     
     # Check the validity of the submitted order
     power = powers_assigned[players.index(ctx.author)]
-    valid_orders = order_validator.get_all_valid_orders(game, power)
+    game_clone = game.clone()
+    game_clone.set_temporarily_unmovable_units([])
+    valid_orders = game_clone.get_valid_orders(power)
     
     if order_text not in valid_orders:
         await ctx.send("Your submitted order is invalid. Please check the list of valid orders and try again.")
@@ -149,7 +153,6 @@ async def order(ctx, *, order_text):
         bot_announcement_channel = discord.utils.get(guild.channels, name="bot-announcement")
         if bot_announcement_channel is not None:
             await send_map_image(bot_announcement_channel, game)
-
 
 @bot.command(name="showmap")
 async def showmap(ctx):
