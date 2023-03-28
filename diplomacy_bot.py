@@ -7,6 +7,10 @@ import io
 import os
 from PIL import Image
 import random
+from io import BytesIO
+from svglib.svglib import svg2rlg
+from reportlab.graphics import renderPM
+
 
 intents = discord.Intents.all()
 intents.typing = False
@@ -19,6 +23,16 @@ intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 # Helper functions
+def convert_svg_to_png(svg_data):
+    svg_io = BytesIO(svg_data.encode('utf-8'))
+    drawing = svg2rlg(svg_io)
+    png_io = BytesIO()
+    renderPM.drawToFile(drawing, png_io, fmt='PNG')
+    png_io.seek(0)
+    return png_io
+
+
+
 async def create_channels(guild):
     overwrites = {
         guild.default_role: discord.PermissionOverwrite(read_messages=True),
@@ -48,7 +62,7 @@ async def send_map_image(player, game):
     buffer = io.BytesIO()
     renderer = Renderer(game)
     svg_data = renderer.render(incl_abbrev=True)
-    cairosvg.svg2png(bytestring=svg_data, write_to=buffer)
+    cairosvg.convert_svg_to_png(svg_data)
     buffer.seek(0)
     await player.send(file=discord.File(fp=buffer, filename="map.png"))
 
