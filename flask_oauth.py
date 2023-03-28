@@ -39,4 +39,4 @@ def callback():
         return "An error occurred during the OAuth2 process.", 400
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host="0.0.0.0")
