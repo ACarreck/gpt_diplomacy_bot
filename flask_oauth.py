@@ -1,12 +1,11 @@
 from flask import Flask, request, redirect
 import requests
+from settings import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 app = Flask(__name__)
 
 # Replace these with your own values
-CLIENT_ID = 'your_client_id'
-CLIENT_SECRET = 'your_client_secret'
-REDIRECT_URI = 'your_redirect_uri'
+
 
 @app.route('/authorize')
 def authorize():
