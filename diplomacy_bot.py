@@ -19,28 +19,18 @@ intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 # Helper functions
-async def create_channels(guild):
+def create_channels(guild):
+    print(guild)
     overwrites = {
-        guild.default_role: discord.PermissionOverwrite(read_messages=True)
+        guild.default_role: discord.PermissionOverwrite(read_messages=True),
+        guild.me: discord.PermissionOverwrite(read_messages=True, send_messages=True),
     }
-    
-    bot_announcement = None
-    for channel in guild.text_channels:
-        if channel.name == "bot-announcement":
-            bot_announcement = channel
-            break
-    if not bot_announcement:
-        bot_announcement = await guild.create_text_channel("bot-announcement", overwrites=overwrites)
-    
-    bot_commands = None
-    for channel in guild.text_channels:
-        if channel.name == "bot-commands":
-            bot_commands = channel
-            break
-    if not bot_commands:
-        bot_commands = await guild.create_text_channel("bot-commands", overwrites=overwrites)
-    
+
+    bot_announcement = guild.create_text_channel("bot-announcement", overwrites=overwrites)
+    bot_commands = guild.create_text_channel("bot-commands", overwrites=overwrites)
+
     return bot_announcement, bot_commands
+
 
 
 async def send_map_image(player, game):
@@ -63,18 +53,18 @@ player_power_map = {}
 @bot.command(name="start")
 async def start(ctx):
     global game, players, orders
-    if len(players) < 1:
-        await ctx.send("There must be at least 1 players to start the game.")
+    if len(players) <1:
+        await ctx.send("There must be at least 3 players to start the game.")
         return
     game = Game()
-    for power, player in zip(game.powers.values(), players):
-        power.user_id = player.id
     await ctx.send("The game has started!")
-    bot_announcement = (await create_channels(ctx.guild))[0]
+    print(ctx.guild)
+    bot_announcement = (create_channels(ctx.guild))[0]
     await bot_announcement.send("A new game of Diplomacy has started!")
     for player in players:
         orders[player.id] = None
         await send_map_image(player, game)
+
 
 
 
@@ -114,7 +104,7 @@ async def order(ctx, *, order_text):
         game.process()
         for player_id in orders:
             orders[player_id] = None
-        bot_announcement = await create_channels(ctx.guild)
+        bot_announcement = create_channels(ctx.guild)
         await bot_announcement.send("The turn has advanced!")
         for player in players:
             await send_map_image(player, game)
@@ -145,7 +135,7 @@ async def endgame(ctx):
         powers_assigned = []
         del endgame.votes
         await ctx.send("The game has ended.")
-        bot_announcement = await create_channels(ctx.guild)
+        bot_announcement = create_channels(ctx.guild)
         await bot_announcement.send("The game of Diplomacy has ended!")
     else:
         votes_needed = (len(players) // 2) + 1 - len(endgame.votes)
@@ -183,7 +173,7 @@ async def on_guild_join(guild):
 async def on_ready():
     print(f"{bot.user} has connected to Discord!")
     for guild in bot.guilds:
-        await create_channels(guild)
+        create_channels(guild)
 
 
 

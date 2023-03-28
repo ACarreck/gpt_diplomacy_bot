@@ -11,6 +11,7 @@ discord-py = "^2.2.2"
 pillow = "^9.4.0"
 diplomacy = {git = "https://github.com/diplomacy/diplomacy.git"}
 cairosvg = "^2.7.0"
+flask = "^2.2.3"
 
 
 [build-system]
