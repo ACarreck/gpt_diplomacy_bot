@@ -59,11 +59,9 @@ async def send_map_image(player, game):
     buffer = convert_svg_to_png(svg_data)
     await player.send(file=discord.File(fp=buffer, filename="map.png"))
 
-    # Send a list of valid orders for the player's country
     power = powers_assigned[players.index(player)]
-    possible_orders_request = GetAllPossibleOrders(power=power)
-    valid_orders = game.handle_request(possible_orders_request).content
-    await player.send("Here's a list of valid orders for your country:\n" + '\n'.join(valid_orders))
+    possible_orders = GetAllPossibleOrders(game=game).get_all_possible_orders()
+    await player.send("Possible orders for {}: {}".format(power, ', '.join(possible_orders[power])))
 
 
 
@@ -129,21 +127,21 @@ async def order(ctx, *, order_text):
         await ctx.send("You are not in the current game.")
         return
 
-    # Check if the order is valid
     power = powers_assigned[players.index(ctx.author)]
-    possible_orders_request = GetAllPossibleOrders(power=power)
-    valid_orders = game.handle_request(possible_orders_request).content
-    if order_text not in valid_orders:
+    possible_orders = GetAllPossibleOrders(game=game).get_all_possible_orders()
+
+    if order_text not in possible_orders[power]:
         await ctx.send("Invalid order. Please provide a valid order.")
         return
 
     orders[ctx.author.id] = order_text
+
     if all(o is not None for o in orders.values()):
         game.set_orders(orders)
         game.process()
         for player_id in orders:
             orders[player_id] = None
-        bot_announcement, _ = await create_channels(ctx.guild)
+        bot_announcement = await create_channels(ctx.guild)
         await bot_announcement.send("The turn has advanced!")
         for player in players:
             await send_map_image(player, game)
@@ -152,6 +150,7 @@ async def order(ctx, *, order_text):
         bot_announcement_channel = discord.utils.get(guild.channels, name="bot-announcement")
         if bot_announcement_channel is not None:
             await send_map_image(bot_announcement_channel, game)
+
 
 @bot.command(name="showmap")
 async def showmap(ctx):
