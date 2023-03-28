@@ -61,7 +61,7 @@ async def send_map_image(player, game):
 
     # Send a list of valid orders for the player's country
     power = powers_assigned[players.index(player)]
-    possible_orders_request = GetAllPossibleOrders(power_name=power)
+    possible_orders_request = GetAllPossibleOrders(power=power)
     valid_orders = game.handle_request(possible_orders_request).content
     await player.send("Here's a list of valid orders for your country:\n" + '\n'.join(valid_orders))
 
@@ -131,7 +131,7 @@ async def order(ctx, *, order_text):
 
     # Check if the order is valid
     power = powers_assigned[players.index(ctx.author)]
-    possible_orders_request = GetAllPossibleOrders(power_name=power)
+    possible_orders_request = GetAllPossibleOrders(power=power)
     valid_orders = game.handle_request(possible_orders_request).content
     if order_text not in valid_orders:
         await ctx.send("Invalid order. Please provide a valid order.")
