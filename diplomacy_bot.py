@@ -72,7 +72,7 @@ async def start(ctx):
         await ctx.send("Please start and join the game from the bot-commands channel.")
         return
 
-    if len(players) < 3:
+    if len(players) < 1:
         await ctx.send("There must be at least 3 players to start the game.")
         return
 
