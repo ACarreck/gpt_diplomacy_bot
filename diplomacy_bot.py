@@ -10,6 +10,7 @@ import random
 from io import BytesIO
 from svglib.svglib import svg2rlg
 from reportlab.graphics import renderPM, shapes
+from diplomacy.utils import order_validator
 
 intents = discord.Intents.all()
 intents.typing = False
@@ -57,6 +58,11 @@ async def send_map_image(player, game):
     svg_data = renderer.render(incl_abbrev=True)
     buffer = convert_svg_to_png(svg_data)
     await player.send(file=discord.File(fp=buffer, filename="map.png"))
+
+    # Send a list of valid orders for the player's country
+    power = powers_assigned[players.index(player)]
+    valid_orders = order_validator.get_all_valid_orders(game, power)
+    await player.send("Here's a list of valid orders for your country:\n" + '\n'.join(valid_orders))
 
 
 game = None
@@ -119,6 +125,15 @@ async def order(ctx, *, order_text):
     if ctx.author.id not in orders:
         await ctx.send("You are not in the current game.")
         return
+    
+    # Check the validity of the submitted order
+    power = powers_assigned[players.index(ctx.author)]
+    valid_orders = order_validator.get_all_valid_orders(game, power)
+    
+    if order_text not in valid_orders:
+        await ctx.send("Your submitted order is invalid. Please check the list of valid orders and try again.")
+        return
+
     orders[ctx.author.id] = order_text
     if all(o is not None for o in orders.values()):
         game.set_orders(orders)
