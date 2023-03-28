@@ -23,7 +23,7 @@ intents.guilds = True
 bot = commands.Bot(command_prefix="!", intents=intents, help_command=None)
 
 # Helper functions
-def convert_svg_to_png(svg_data, scale=4):
+def convert_svg_to_png(svg_data, scale=3):
     svg_io = BytesIO(svg_data.encode('utf-8'))
     drawing = svg2rlg(svg_io)
 
