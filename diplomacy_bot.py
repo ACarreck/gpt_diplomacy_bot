@@ -47,7 +47,7 @@ async def create_channels(guild):
 async def send_map_image(player, game):
     buffer = io.BytesIO()
     renderer = Renderer(game)
-    svg_data = renderer.render()
+    svg_data = renderer.render(incl_abbrev=False)
     cairosvg.svg2png(bytestring=svg_data, write_to=buffer)
     buffer.seek(0)
     await player.send(file=discord.File(fp=buffer, filename="map.png"))
@@ -118,6 +118,11 @@ async def order(ctx, *, order_text):
         await bot_announcement.send("The turn has advanced!")
         for player in players:
             await send_map_image(player, game)
+
+        guild = players[0].guild
+        bot_announcement_channel = discord.utils.get(guild.channels, name="bot-announcement")
+        if bot_announcement_channel is not None:
+            await send_map_image(bot_announcement_channel, game)
 
 @bot.command(name="showmap")
 async def showmap(ctx):
