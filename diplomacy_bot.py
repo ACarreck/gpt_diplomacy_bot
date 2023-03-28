@@ -60,8 +60,8 @@ async def send_map_image(player, game):
 
     power = powers_assigned[players.index(player)]
     possible_orders = game.get_all_possible_orders()
-    possible_orders = {unit: orders for unit, orders in possible_orders.items()}
-    await player.send("Possible orders for {}: {}".format(power, ', '.join(possible_orders)))
+    possible_orders = {unit: orders for unit, orders in possible_orders.items() if game.map[unit].split()[0] == power}
+    await player.send("Possible orders for {}: {}".format(power, ', '.join(f"{unit}: {', '.join(orders)}" for unit, orders in possible_orders.items())))
 
 
 
@@ -127,29 +127,42 @@ async def order(ctx, *, order_text):
         await ctx.send("You are not in the current game.")
         return
 
+    power = powers_assigned[players.index(ctx.author)]
     possible_orders = game.get_all_possible_orders()
-    possible_orders = {unit: orders for unit, orders in possible_orders.items()}
+    possible_orders = {unit: orders for unit, orders in possible_orders.items() if game.map[unit].split()[0] == power}
 
-    if order_text not in possible_orders:
+    if order_text not in [order for orders in possible_orders.values() for order in orders]:
         await ctx.send("Invalid order. Please provide a valid order.")
         return
 
-    orders[ctx.author.id] = order_text
+    if orders[ctx.author.id] is None:
+        orders[ctx.author.id] = [order_text]
+    else:
+        orders[ctx.author.id].append(order_text)
 
-    if all(o is not None for o in orders.values()):
-        game.set_orders(orders)
-        game.process()
-        for player_id in orders:
-            orders[player_id] = None
-        bot_announcement = await create_channels(ctx.guild)
-        await bot_announcement.send("The turn has advanced!")
-        for player in players:
-            await send_map_image(player, game)
+    remaining_orders = [unit for unit, unit_orders in possible_orders.items() if all(order not in orders[ctx.author.id] for order in unit_orders)]
+    if remaining_orders:
+        await ctx.send(f"Order accepted. You still need to issue orders for the following units: {', '.join(remaining_orders)}")
+    else:
+        all_orders_complete = all(o is not None for o in orders.values())
+        if all_orders_complete:
+            for player_id, player_orders in orders.items():
+                power_name = powers_assigned[players.index(bot.get_user(player_id))]
+                game.set_orders(power_name, player_orders)
 
-        guild = players[0].guild
-        bot_announcement_channel = discord.utils.get(guild.channels, name="bot-announcement")
-        if bot_announcement_channel is not None:
-            await send_map_image(bot_announcement_channel, game)
+            game.process()
+            for player_id in orders:
+                orders[player_id] = None
+            bot_announcement, _ = await create_channels(ctx.guild)
+            await bot_announcement.send("The turn has advanced!")
+            for player in players:
+                await send_map_image(player, game)
+
+            guild = players[0].guild
+            bot_announcement_channel = discord.utils.get(guild.channels, name="bot-announcement")
+            if bot_announcement_channel is not None:
+                await send_map_image(bot_announcement_channel, game)
+
 
 
 @bot.command(name="showmap")
