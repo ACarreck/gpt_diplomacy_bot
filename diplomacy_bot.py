@@ -28,6 +28,9 @@ def convert_svg_to_png(svg_data, scale=2):
     drawing = svg2rlg(svg_io)
 
     # Scale the drawing for a higher resolution
+    drawing.width *= scale
+    drawing.height *= scale
+    drawing.scale(scale, scale)
     drawing.renderScale = scale
 
     # Render the scaled drawing as a PNG image
