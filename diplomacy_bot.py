@@ -172,7 +172,7 @@ async def order(ctx, *, order_text):
             game.process()
             for player_id in orders:
                 orders[player_id] = None
-            bot_announcement, _ = await create_channels(ctx.guild)
+            bot_announcement, _ = await create_channels(guild)
             await bot_announcement.send("The turn has advanced!")
             for player in players:
                 await send_map_image(player, game)
